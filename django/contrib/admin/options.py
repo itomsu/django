@@ -305,6 +305,13 @@ class BaseModelAdmin(object):
         opts = self.opts
         return request.user.has_perm(opts.app_label + '.' + opts.get_delete_permission())
 
+    def has_view_permission(self, request, obj=None):
+        if (request.method == 'POST'):
+            return None
+
+        opts = self.opts
+        return request.user.has_perm(opts.app_label + '.' + opts.get_view_permission())
+
 class ModelAdmin(BaseModelAdmin):
     "Encapsulates all admin options and functionality for a given model."
 
@@ -418,6 +425,7 @@ class ModelAdmin(BaseModelAdmin):
             'add': self.has_add_permission(request),
             'change': self.has_change_permission(request),
             'delete': self.has_delete_permission(request),
+            'view': self.has_view_permission(request),
         }
 
     def get_fieldsets(self, request, obj=None):
@@ -1017,7 +1025,8 @@ class ModelAdmin(BaseModelAdmin):
         obj = self.get_object(request, unquote(object_id))
 
         if not self.has_change_permission(request, obj):
-            raise PermissionDenied
+            if not self.has_view_permission(request, obj):
+                raise PermissionDenied
 
         if obj is None:
             raise Http404(_('%(name)s object with primary key %(key)r does not exist.') % {'name': force_unicode(opts.verbose_name), 'key': escape(object_id)})
@@ -1107,8 +1116,10 @@ class ModelAdmin(BaseModelAdmin):
         from django.contrib.admin.views.main import ERROR_FLAG
         opts = self.model._meta
         app_label = opts.app_label
+
         if not self.has_change_permission(request, None):
-            raise PermissionDenied
+            if not self.has_view_permission(request, None):
+                raise PermissionDenied
 
         list_display = self.get_list_display(request)
         list_display_links = self.get_list_display_links(request, list_display)

@@ -359,6 +359,9 @@ class Options(object):
     def get_delete_permission(self):
         return 'delete_%s' % self.object_name.lower()
 
+    def get_view_permission(self):
+        return 'view_%s' % self.object_name.lower()
+
     def get_all_related_objects(self, local_only=False, include_hidden=False,
                                 include_proxy_eq=False):
         return [k for k, v in self.get_all_related_objects_with_model(
